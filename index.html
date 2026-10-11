@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tip Calculator</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --muted: #94a3b8;
+      --text: #f8fafc;
+      --accent: #34d399;
+      --accent-dim: #064e3b;
+      --input: #0b1220;
+      --border: #334155;
+      --danger: #f87171;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      background:
+        radial-gradient(900px 400px at 10% -10%, #134e4a 0%, transparent 50%),
+        radial-gradient(700px 300px at 100% 0%, #1e3a8a 0%, transparent 45%),
+        var(--bg);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 16px;
+    }
+
+    .card {
+      width: min(680px, 100%);
+      display: grid;
+      grid-template-columns: 1fr 200px;
+      gap: 8px 24px;
+      align-items: start;
+      background: color-mix(in srgb, var(--card) 92%, transparent);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(8px);
+    }
+
+    .header, .form, .error { grid-column: 1; }
+    .header { grid-column: 1 / -1; }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.45rem;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .field { margin-bottom: 12px; }
+
+    input[type="number"] {
+      width: 100%;
+      background: var(--input);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+    }
+
+    .tips {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .tips button {
+      background: var(--input);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 0;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .tips button.active,
+    .tips button:hover {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .results {
+      grid-column: 2;
+      grid-row: 2 / 5;
+      align-self: stretch;
+      background: #0b1220;
+      border-radius: 14px;
+      padding: 16px 18px;
+      display: grid;
+      align-content: start;
+      gap: 16px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .row span { color: var(--muted); font-size: 0.9rem; }
+    .row strong { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+    .row.total strong { color: var(--accent); font-size: 1.35rem; }
+
+    .error {
+      min-height: 1.1em;
+      color: var(--danger);
+      font-size: 0.85rem;
+      margin: 0;
+    }
+
+    @media (max-width: 560px) {
+      .card, .header, .form, .error, .results {
+        grid-column: 1;
+        grid-row: auto;
+      }
+      .card { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="header">
+      <h1>Tip Calculator</h1>
+      <p class="subtitle">Split the bill and add a tip in seconds.</p>
+    </div>
+
+    <div class="form">
+    <div class="field">
+      <label for="bill">Bill amount ($)</label>
+      <input id="bill" type="number" min="0" step="0.01" value="50" />
+    </div>
+
+    <div class="field">
+      <label>Tip percentage</label>
+      <div class="tips" id="tip-buttons">
+        <button type="button" data-tip="10">10%</button>
+        <button type="button" data-tip="15" class="active">15%</button>
+        <button type="button" data-tip="18">18%</button>
+        <button type="button" data-tip="20">20%</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="custom-tip">Custom tip (%)</label>
+      <input id="custom-tip" type="number" min="0" step="0.1" placeholder="e.g. 22" />
+    </div>
+
+    <div class="field">
+      <label for="people">Number of people</label>
+      <input id="people" type="number" min="1" step="1" value="2" />
+    </div>
+    </div>
+
+    <p class="error" id="error"></p>
+
+    <div class="results">
+      <div class="row">
+        <span>Tip</span>
+        <strong id="tip-amount">$0.00</strong>
+      </div>
+      <div class="row total">
+        <span>Total</span>
+        <strong id="total">$0.00</strong>
+      </div>
+      <div class="row">
+        <span>Per person</span>
+        <strong id="per-person">$0.00</strong>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const billInput = document.getElementById("bill");
+    const peopleInput = document.getElementById("people");
+    const customTip = document.getElementById("custom-tip");
+    const errorEl = document.getElementById("error");
+    const tipButtons = document.querySelectorAll("#tip-buttons button");
+
+    let selectedTip = 15;
+
+    const money = (n) =>
+      n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+
+    function setActiveButton(tip) {
+      tipButtons.forEach((btn) => {
+        btn.classList.toggle("active", Number(btn.dataset.tip) === tip);
+      });
+    }
+
+    function calculate() {
+      const bill = Number(billInput.value);
+      const people = Number(peopleInput.value);
+      const custom = customTip.value === "" ? null : Number(customTip.value);
+      const tipPct = custom !== null && Number.isFinite(custom) ? custom : selectedTip;
+
+      if (!Number.isFinite(bill) || bill < 0) {
+        errorEl.textContent = "Enter a valid bill amount.";
+        return;
+      }
+      if (!Number.isFinite(people) || people < 1 || !Number.isInteger(people)) {
+        errorEl.textContent = "People must be a whole number of at least 1.";
+        return;
+      }
+      if (!Number.isFinite(tipPct) || tipPct < 0) {
+        errorEl.textContent = "Enter a valid tip percentage.";
+        return;
+      }
+
+      errorEl.textContent = "";
+      const tipAmount = bill * (tipPct / 100);
+      const total = bill + tipAmount;
+      document.getElementById("tip-amount").textContent = money(tipAmount);
+      document.getElementById("total").textContent = money(total);
+      document.getElementById("per-person").textContent = money(total / people);
+    }
+
+    tipButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        selectedTip = Number(btn.dataset.tip);
+        customTip.value = "";
+        setActiveButton(selectedTip);
+        calculate();
+      });
+    });
+
+    customTip.addEventListener("input", () => {
+      if (customTip.value !== "") {
+        tipButtons.forEach((btn) => btn.classList.remove("active"));
+      } else {
+        setActiveButton(selectedTip);
+      }
+      calculate();
+    });
+
+    [billInput, peopleInput].forEach((el) => el.addEventListener("input", calculate));
+    calculate();
+  </script>
+</body>
+</html>
